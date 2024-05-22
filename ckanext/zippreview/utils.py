@@ -35,7 +35,11 @@ def get_zip_list(rsc):
         url = urlparse(rsc['url'])
         filename = os.path.basename(url.path)
         
-        URL = upload.get_url_from_filename(rsc['id'], filename, '')
+        if upload.__class__.__name__ == 'S3ResourceUploader':
+            URL = upload.get_signed_url_to_key(upload.get_path(rsc['id'], filename))
+        else:
+            URL = upload.get_url_from_filename(rsc['id'], filename, '')
+        
         return get_ziplist_from_url(URL)
     else:
         return get_ziplist_from_url(rsc.get('url'))
