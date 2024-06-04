@@ -129,7 +129,7 @@ def get_zip_tree(rsc):
     log.info('ckanext-zippreview - get_zip_tree, calling get_zip_list')
     zip_list = get_zip_list(rsc)
     if not zip_list:
-    log.info('ckanext-zippreview - NOT zip_list')
+        log.info('ckanext-zippreview - NOT zip_list')
         return
 
     log.info('ckanext-zippreview - get_zip_tree, zip_list retrieved')
