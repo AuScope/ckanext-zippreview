@@ -17,28 +17,44 @@ ALLOWED_FMTS = ('zip', 'application/zip', 'application/x-zip-compressed')
 
 
 def get_zip_list(rsc):
+    log.info('ckanext-zippreview - get_zip_list, url_type: ' + str(rsc.get('url_type')))
     if rsc.get('url_type') == 'upload':
+        log.info('ckanext-zippreview - get_zip_list: getting upload')
         upload = uploader.ResourceUpload(rsc)
         value = None
         try:
+            log.info('ckanext-zippreview - upload path: ' + str(upload.get_path(rsc['id'])))
             zf = zipfile.ZipFile(upload.get_path(rsc['id']), 'r')
+            log.info('ckanext-zippreview - zipfile created for reading')
             value = zf.filelist
-        except Exception:
+        except Exception as e:
             # Sometimes values that can't be converted to ints can sneak
             # into the db. In this case, just leave them as they are.
+            log.info('ckanext-zippreview - get_zip_list Exception: ' + str(e))
             pass
 
         if value:
+            log.info('ckanext-zippreview - value found (returning): ' + str(value))
             return value
 
+        log.info('ckanext-zippreview - retrieving upload')
         upload = uploader.get_resource_uploader(rsc)
+        log.info('ckanext-zippreview - upload retrieved')
         url = urlparse(rsc['url'])
+        log.info('ckanext-zippreview - upload url: ' + str(url))
         filename = os.path.basename(url.path)
+        log.info('ckanext-zippreview - filename: ' + str(filename))
+        
+        log.info('ckanext-zippreview - upload class name: ' + str(upload.__class__.__name__))
         
         if upload.__class__.__name__ == 'S3ResourceUploader':
+            log.info('ckanext-zippreview - S3ResourceUploader upload')
             URL = upload.get_signed_url_to_key(upload.get_path(rsc['id'], filename))
         else:
+            log.info('ckanext-zippreview - NOT S3ResourceUploader upload')
             URL = upload.get_url_from_filename(rsc['id'], filename, '')
+            
+        log.info('ckanext-zippreview - URL: ' + str(URL))
         
         return get_ziplist_from_url(URL)
     else:
@@ -47,20 +63,26 @@ def get_zip_list(rsc):
 
 
 def get_ziplist_from_url(url):
+    log.info('ckanext-zippreview - get_ziplist_from_url, url: ' + str(url))
     try:
+        log.info('ckanext-zippreview - get_ziplist_from_url, creating head')
         head = requests.head(url)
+        log.info('ckanext-zippreview - get_ziplist_from_url head created')
         if 'content-length' in head.headers:
             end = int(head.headers['content-length'])
-
+            log.info('ckanext-zippreview - get_ziplist_from_url, content-length end: ' + str(end))
         if 'content-range' in head.headers:
             end = int(head.headers['content-range'].split("/")[1])
+            log.info('ckanext-zippreview - get_ziplist_from_url, content-range end: ' + str(end))
         return _get_list(url, end-65536, end)
-    except Exception:
+    except Exception as e:
+        log.info('ckanext-zippreview - get_ziplist_from_url, Exception 1: ' + str(e))
         pass
 
     try:
         return _get_list_advanced(url)
-    except Exception:
+    except Exception as e:
+    log.info('ckanext-zippreview - get_ziplist_from_url, Exception 2: ' + str(e))
         return
 
 
@@ -103,13 +125,17 @@ def _open_remote_zip(url, offset=0):
     return requests.get(url, headers={'Range': 'bytes={}-'.format(offset)})
 
 
-def get_zip_tree(rsc):    
+def get_zip_tree(rsc):
+    log.info('ckanext-zippreview - get_zip_tree, calling get_zip_list')
     zip_list = get_zip_list(rsc)
     if not zip_list:
+    log.info('ckanext-zippreview - NOT zip_list')
         return
 
+    log.info('ckanext-zippreview - get_zip_tree, zip_list retrieved')
     tree = OrderedDict()
     for compressed_file in zip_list:
+        log.info('ckanext-zippreview - get_zip_tree, filename: ' + str(tree[compressed_file.filename]))
         if "/" not in compressed_file.filename:
             tree[compressed_file.filename] = _prepare_file_data(
                 compressed_file)
