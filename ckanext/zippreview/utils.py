@@ -82,7 +82,7 @@ def get_ziplist_from_url(url):
     try:
         return _get_list_advanced(url)
     except Exception as e:
-    log.info('ckanext-zippreview - get_ziplist_from_url, Exception 2: ' + str(e))
+        log.info('ckanext-zippreview - get_ziplist_from_url, Exception 2: ' + str(e))
         return
 
 
