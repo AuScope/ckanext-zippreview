@@ -69,9 +69,11 @@ def get_ziplist_from_url(url):
         head = requests.head(url)
         log.info('ckanext-zippreview - get_ziplist_from_url head created')
         if 'content-length' in head.headers:
+            log.info('ckanext-zippreview - content-length: ' + str(head.headers['content-length']))
             end = int(head.headers['content-length'])
             log.info('ckanext-zippreview - get_ziplist_from_url, content-length end: ' + str(end))
         if 'content-range' in head.headers:
+            log.info('ckanext-zippreview - content-range: ' + str(head.headers['content-range']))
             end = int(head.headers['content-range'].split("/")[1])
             log.info('ckanext-zippreview - get_ziplist_from_url, content-range end: ' + str(end))
         return _get_list(url, end-65536, end)
@@ -87,6 +89,7 @@ def get_ziplist_from_url(url):
 
 
 def _get_list(url, start, end):
+    log.info('ckanext-zippreview - _get_list')
     resp = requests.get(
         url, headers={'Range': 'bytes={}-{}'.format(start, end)})
     fp = BytesIO(resp.content)
@@ -96,8 +99,13 @@ def _get_list(url, start, end):
 def _get_list_advanced(url):
     # https://superuser.com/questions/981301/is-there-a-way-to-download-parts-of-the-content-of-a-zip-file
 
+    log.info('ckanext-zippreview - _get_list_advanced')
+
     offset = 0
     fp = _open_remote_zip(url)
+    
+    log.info('ckanext-zippreview - fp.class.name: ' + str(fp.__class__.__name__))
+    
     header = fp.read(30)
     file_list = []
 
@@ -122,6 +130,7 @@ def _get_list_advanced(url):
 
 
 def _open_remote_zip(url, offset=0):
+    log.info('ckanext-zippreview - _open_remote_zip')
     return requests.get(url, headers={'Range': 'bytes={}-'.format(offset)})
 
 
