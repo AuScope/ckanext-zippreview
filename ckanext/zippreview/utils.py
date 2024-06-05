@@ -144,7 +144,7 @@ def get_zip_tree(rsc):
     log.info('ckanext-zippreview - get_zip_tree, zip_list retrieved')
     tree = OrderedDict()
     for compressed_file in zip_list:
-        log.info('ckanext-zippreview - get_zip_tree, filename: ' + str(tree[compressed_file.filename]))
+        log.info('ckanext-zippreview - get_zip_tree, compressed_file filename: ' + str(compressed_file.filename))
         if "/" not in compressed_file.filename:
             tree[compressed_file.filename] = _prepare_file_data(
                 compressed_file)
