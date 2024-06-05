@@ -76,6 +76,12 @@ def get_ziplist_from_url(url):
             log.info('ckanext-zippreview - content-range: ' + str(head.headers['content-range']))
             end = int(head.headers['content-range'].split("/")[1])
             log.info('ckanext-zippreview - get_ziplist_from_url, content-range end: ' + str(end))
+        # repos-dev not returning content-length or content-range
+        try:
+            end
+        except Exception as einner:
+            log.info('ckanext-zippreview - get_ziplist_from_url: end is nor defined, setting to 0')
+            end = 0
         return _get_list(url, end-65536, end)
     except Exception as e:
         log.info('ckanext-zippreview - get_ziplist_from_url, Exception 1: ' + str(e))
