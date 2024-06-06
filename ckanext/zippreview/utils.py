@@ -2,7 +2,6 @@ import struct
 import re
 import zipfile
 import os
-import logging
 
 from io import BytesIO
 from collections import OrderedDict
@@ -11,7 +10,6 @@ from urllib.parse import urlparse
 import requests
 
 from ckan.lib import uploader, formatters
-log = logging.getLogger(__name__)
 
 ALLOWED_FMTS = ('zip', 'application/zip', 'application/x-zip-compressed')
 
@@ -54,6 +52,11 @@ def get_ziplist_from_url(url):
 
         if 'content-range' in head.headers:
             end = int(head.headers['content-range'].split("/")[1])
+        # S3 doesn't want to return a content-length or content-range
+        try:
+            end
+        except Exception:
+            end = 0
         return _get_list(url, end-65536, end)
     except Exception:
         pass
@@ -103,7 +106,7 @@ def _open_remote_zip(url, offset=0):
     return requests.get(url, headers={'Range': 'bytes={}-'.format(offset)})
 
 
-def get_zip_tree(rsc):    
+def get_zip_tree(rsc):
     zip_list = get_zip_list(rsc)
     if not zip_list:
         return
